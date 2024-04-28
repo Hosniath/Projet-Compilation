@@ -1,0 +1,7 @@
+function void surface (int longueur, int largeur) {
+loc int surf
+surf=0;
+surf=longueur*largeur;
+write surf
+		
+ 				} 

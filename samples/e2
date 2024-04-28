@@ -1,0 +1,5 @@
+glob int x; 
+glob int y;
+function void Main () {
+	none
+	}

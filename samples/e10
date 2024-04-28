@@ -1,0 +1,12 @@
+glob int a;
+function int waoh(int i, int j){
+		loc int x
+		x=i+j;
+		return (x+10) ;
+						}
+;
+function void Main () {
+		none
+ a=call(waoh(1;2));;
+		write a
+					}

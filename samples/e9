@@ -1,0 +1,5 @@
+function int somme(int x, int y){
+loc int res
+		res=x+y
+		return (res) ;
+						}

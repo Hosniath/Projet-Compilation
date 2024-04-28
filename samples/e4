@@ -1,0 +1,8 @@
+glob int x;
+function void Main () {
+			none
+if (3>5) 
+	then {x=3} 	
+		otherwise {x=5}
+ 			
+ 						} 

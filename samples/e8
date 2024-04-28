@@ -1,0 +1,6 @@
+$fonction qui retourne l'addition d un entier donne avec 2 
+function int somme(int x){
+		none
+		x=x+2
+		return (x) ;
+						}

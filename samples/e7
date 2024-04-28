@@ -1,0 +1,6 @@
+function void afficher (int x) { 
+			none
+	write (x);
+	call (afficher (2));
+			
+								}

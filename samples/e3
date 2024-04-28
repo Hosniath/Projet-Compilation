@@ -1,0 +1,8 @@
+glob int x; 
+glob int y;
+function void Main () {
+			loc int z
+		read x; 
+		z=x+y; 
+		write z
+					}

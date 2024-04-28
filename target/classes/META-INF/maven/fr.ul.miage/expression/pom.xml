@@ -1,0 +1,141 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>fr.ul.miage</groupId>
+  <artifactId>expression</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  	<properties>
+		<!-- Le code source en UTF8 -->
+		<project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
+		<!-- Où stocker la distribution binaire -->
+		<project.bindist.dir>${project.basedir}/bindist</project.bindist.dir>
+		<!-- Nom de la classe principale -->
+		<project.main.classname>${project.groupId}.${project.artifactId}.Main</project.main.classname>
+		<!-- Nom du script executable -->
+		<project.bin.appname>parser</project.bin.appname>
+		<!-- Dossier où se trouvent le scanner et le parser -->
+		<project.cuplex.dir>src/main/cuplex</project.cuplex.dir>
+		<!-- Nom du fichier CUP -->
+		<project.cup.filename>Parser.cup</project.cup.filename>
+		<!-- Dossier pour stocker les .java générés -->
+		<project.generated.dir>src/main/java</project.generated.dir>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<!-- use java 17 -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.12.1</version>
+				<configuration>
+					<release>17</release>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- create a binary distribution -->
+				<!-- create scripts for apps -->
+				<!-- mvn package | appassembler:assemble -->
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>appassembler-maven-plugin</artifactId>
+				<version>1.10</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+						<configuration>
+							<assembleDirectory>${project.bindist.dir}</assembleDirectory>
+							<programs>
+								<program>
+									<mainClass>${project.main.classname}</mainClass>
+									<id>${project.bin.appname}</id>
+								</program>
+							</programs>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- create a source distribution -->
+				<!-- mvn install ou assembly:single -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<descriptors>
+						<descriptor>zip.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Utiliser le plugin jflex -->
+			<!-- mvn generate-sources -->
+			<plugin>
+				<groupId>de.jflex</groupId>
+				<artifactId>jflex-maven-plugin</artifactId>
+				<version>1.9.1</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<lexDefinitions>
+						<lexDefinition>src/main/cuplex</lexDefinition>
+					</lexDefinitions>
+					<outputDirectory>src/main/java</outputDirectory>
+					<verbose>true</verbose>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Utiliser le plugin cup  -->
+				<!-- mvn generate-sources -->
+				<!-- Conventions : - le fichier - le fichier .cup se trouve dans le dossier 
+					src/main/cuplex - il se nomme Parser.cup - il génère une interface nommée 
+					Sym -->
+				<groupId>com.github.vbmacher</groupId>
+				<artifactId>cup-maven-plugin</artifactId>
+				<version>11b-20160615</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<cupDefinition>${project.cuplex.dir}/${project.cup.filename}</cupDefinition>
+							<className>ParserCup</className>
+							<symbolsName>Sym</symbolsName>
+							<outputDirectory>${project.generated.dir}</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<!-- Utiliser CUP 0.11b -->
+		<!-- https://mvnrepository.com/artifact/com.github.vbmacher/java-cup-runtime -->
+		<dependency>
+			<groupId>com.github.vbmacher</groupId>
+			<artifactId>java-cup-runtime</artifactId>
+			<version>11b</version>
+		</dependency>
+		<!-- On utilise la librairie arbre --> 
+		<dependency>
+			<groupId>fr.ul.miage</groupId> 
+			<artifactId>arbre</artifactId> 
+			<version>0.0.6</version>
+		</dependency>
+	</dependencies>
+</project>

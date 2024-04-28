@@ -1,0 +1,309 @@
+package generated.fr.ul.miage.expression;
+import fr.ul.miage.arbre.*;
+import java.util.ArrayList;
+import java.util.List;
+import tds.*;
+import tds.Symbole.Type;
+parser code {:
+	public Prog program=new Prog();
+	public TDS tds= new TDS();
+:}
+terminal ADD, MOINS,DIV, MUL, PO, PF,EGAL,SUP,INF,INFEGAL,SUPEGAL,DIFF,IDF, ASSIGN, PV, INT, SI,ALORS, SINON;
+terminal FAIT, TANTQUE, FONCTION, FIN, Vi, AO, AF, LIRE, ECRIRE, GLOBAL, LOCAL, APPEL, RETOUR, VOID, RIEN;
+terminal Integer NUM;
+non terminal programme;
+non terminal  Noeud expression, facteur, atome,comparaison,instruction,affectation, declaration, condition, appel, argument, retour;
+non terminal Noeud  parametre, blocInstruction,lecture, ecriture, variableGlobale, boucle, fonction, varlocale,listeVariable;
+non terminal List<Noeud> listeLocale,listeParametre, listeargument,listeInstruction, suiteInstruction,listeFonction;
+non terminal type;
+start with programme;
+programme ::=listeVariable:lv  listeFonction: f {:
+if(!f.isEmpty()){
+    for(Noeud i: f){
+	program.ajouterUnFils(i);
+	}
+}
+:}
+		;
+
+
+expression ::= expression:x ADD facteur:f {:
+									Plus resu =new Plus();
+										resu.setFilsGauche(x);
+										resu.setFilsDroit(f);
+									 RESULT= resu;
+ 											:} 
+ 			|expression:x MOINS atome:a  {: Moins resu=new Moins();
+								resu.setFilsGauche(x);
+								resu.setFilsDroit(a);
+								RESULT=resu;
+						  :} 								
+			|facteur:f                    {: RESULT=f; :}
+			
+
+;
+facteur ::= facteur:f MUL atome:a {: 
+					Multiplication resu=new Multiplication();
+					resu.setFilsGauche(f);
+					resu.setFilsDroit(a);
+					RESULT=resu;
+								:}
+
+			|facteur:f DIV atome:a  {: Division resu=new Division();
+										resu.setFilsGauche(f);
+										resu.setFilsDroit(a);
+										RESULT=resu;
+						  			:} 
+						  
+			|atome:a {: RESULT=a; :}
+;
+comparaison::=  expression:x  EGAL  expression:x1  {: Egal resu=new Egal();
+										resu.setFilsGauche(x);
+										resu.setFilsDroit(x1);
+										RESULT=resu;
+						  			:} 
+			|  expression:x  DIFF  expression:x1  {: Different resu=new Different();
+										resu.setFilsGauche(x);
+										resu.setFilsDroit(x1);
+										RESULT=resu;
+						  			:} 
+			| expression:x  SUP  expression:x1 {: Superieur resu=new Superieur();
+										resu.setFilsGauche(x);
+										resu.setFilsDroit(x1);
+										RESULT=resu;
+						  			:} 
+			|  expression:x  INF  expression:x1  {: Inferieur resu=new Inferieur();
+										resu.setFilsGauche(x);
+										resu.setFilsDroit(x1);
+										RESULT=resu;
+						  			:} 
+			| expression:x  INFEGAL  expression:x1  {: InferieurEgal resu=new InferieurEgal();
+										resu.setFilsGauche(x);
+										resu.setFilsDroit(x1);
+										RESULT=resu;
+						  			:} 
+			| expression:x  SUPEGAL  expression:x1  {: SuperieurEgal resu=new SuperieurEgal();
+										resu.setFilsGauche(x);
+										resu.setFilsDroit(x1);
+										RESULT=resu;
+						  			:} 
+;
+type ::=INT;
+instruction ::= affectation:af {: RESULT=af;:} 
+			  | declaration: d  {: RESULT=d;:}
+			  |condition: c {: RESULT=c;:} 
+			  |boucle :b {: RESULT=b;:}
+			  |ecriture : e {:RESULT=e;:}
+			  |appel:a {:RESULT=a;:}
+			  |lecture: l {:RESULT=l;:}
+;
+affectation ::= IDF:v ASSIGN expression:x {: Affectation resu=new Affectation();
+											Idf fils=new Idf(v);
+										resu.setFilsGauche(fils);
+										resu.setFilsDroit(x);
+										RESULT=resu;:}
+				|IDF:v ASSIGN appel:a {: Affectation resu=new Affectation();
+											Idf fils=new Idf(v);
+										resu.setFilsGauche(fils);
+										resu.setFilsDroit(a);
+										RESULT=resu;:}	
+			  
+;
+declaration ::= variableGlobale:v PV {: 
+								RESULT=v;:}
+			   |varlocale:v1 PV {: 
+								RESULT=v1;:}
+			   |
+				type affectation: a {:RESULT= a;:} 
+;
+
+listeInstruction ::= instruction:i PV suiteInstruction:s  {:
+				List<Noeud> liste=new ArrayList<Noeud>();
+							liste.add(i); 
+	for (Noeud node: s){
+liste.add(node);
+} 
+
+					RESULT=liste;
+                     :}
+                     | instruction:i  {:List<Noeud> liste=new ArrayList<Noeud>();
+							liste.add(i);  			
+							RESULT=liste;
+                     :}
+                     |{:List<Noeud> liste=new ArrayList<Noeud>();
+							RESULT=liste;
+                     :}
+                     ;
+
+suiteInstruction ::= listeInstruction:l  {:
+                            RESULT = l;
+                     :} ;
+
+
+blocInstruction ::= AO listeInstruction:l AF {: Bloc bloc=new Bloc();
+								bloc.ajouterDesFils(l);
+RESULT=bloc;:};
+
+condition ::= SI PO comparaison:c PF ALORS blocInstruction:b1 SINON blocInstruction:b2 {:
+			 Si si =new Si(1);
+             si.setCondition(c);
+		      si.setBlocAlors((Bloc) b1);
+		     si.setBlocSinon((Bloc) b2);
+		RESULT=si;
+			;:}
+			
+; 
+boucle ::= TANTQUE PO comparaison:c PF FAIT blocInstruction:b FIN{: 
+								TantQue tq =new TantQue(1);
+								
+									tq.setCondition(c);
+									tq.setBloc((Bloc) b);
+		
+								RESULT=tq
+									;:} ;
+									
+parametre ::= type IDF:i  {: 
+								RESULT=new Idf(i);:}
+								;
+listeParametre ::= parametre:i  {: List<Noeud> liste=new ArrayList<Noeud>();
+							liste.add(i);
+							RESULT=liste;:}
+				| parametre:p1 Vi parametre:p2 {:List<Noeud> liste=new ArrayList<Noeud>();
+					liste.add(p1);
+					liste.add(p2);
+					RESULT=liste;:}
+				|  {:List<Noeud> liste=new ArrayList<Noeud>();
+                    RESULT=liste;:}
+; 
+fonction ::= FONCTION INT IDF:d PO listeParametre:p PF AO listeLocale:l listeInstruction:b  retour:r AF{:
+					Fonction fo=new Fonction(d);
+			if (b!=null){
+				    fo.ajouterDesFils(b);
+}
+					Retour rtn=new Retour(d);
+					rtn.setLeFils(((Retour) r).getLeFils());
+					fo.ajouterUnFils(rtn);
+					
+			SymbFonction f= new SymbFonction((String) d,Type.INT,p.size(),l.size());
+			tds.Ajout(f);
+    if(!p.isEmpty()){
+        for(Noeud i: p){
+        		Parametre pi= new Parametre((String) ((Idf) i).getValeur(),Type.INT,f);
+				tds.Ajout(pi);
+						}
+				}
+	if(!l.isEmpty()){
+		for(Noeud i: l){
+        		Locale lx= new Locale((String) ((Idf) i).getValeur(),Type.INT,f); 
+				tds.Ajout(lx);
+						}
+					}
+					RESULT=fo;:}
+ 		| FONCTION VOID IDF:d PO listeParametre:p PF AO listeLocale:l listeInstruction:b AF{:
+					Fonction fo=new Fonction(d);
+if (b!=null){
+				    fo.ajouterDesFils(b);
+}
+			
+			SymbFonction f= new SymbFonction((String) d,Type.VOID,p.size(),l.size());
+			tds.Ajout(f);
+    			if(!p.isEmpty()){
+        			for(Noeud i: p){
+        				Parametre pi= new Parametre((String) ((Idf) i).getValeur(),Type.INT,f);
+						tds.Ajout(pi);
+								}
+							}
+						if(!l.isEmpty()){
+							for(Noeud i: l){
+        							Locale lx= new Locale((String) ((Idf) i).getValeur(),Type.INT,f); 
+									tds.Ajout(lx);
+									}
+									}
+					RESULT=fo;:} 									
+; 
+listeFonction ::=fonction:f {:List <Noeud> liste=new ArrayList<Noeud>();
+							liste.add(f);
+ RESULT=liste;:} 
+				| fonction:f1 PV fonction:f2 {:
+					List <Noeud> liste=new ArrayList<Noeud>();
+							liste.add(f1);
+							liste.add(f2);
+					
+					RESULT=liste;
+				:} | {:List <Noeud> liste=new ArrayList<Noeud>();
+							 RESULT=liste;:}
+				;	
+variableGlobale ::= GLOBAL type IDF:f PV{: Global fi =new Global((String) f, Type.INT,0);
+										tds.Ajout(fi);
+										RESULT=new Idf(f);
+:}
+;
+
+varlocale ::=LOCAL type IDF:f {: RESULT=new Idf(f);:};
+listeLocale ::= varlocale:v {:List<Noeud> liste=new ArrayList<Noeud>();
+								liste.add(v);
+RESULT=liste;:} 
+| varlocale:v1 PV varlocale:v2 {:
+								List<Noeud> liste=new ArrayList<Noeud>();
+									liste.add(v1);
+									liste.add(v2);
+								;	
+					RESULT=liste;:} 
+|RIEN  {:List<Noeud> liste=new ArrayList<Noeud>();
+		RESULT=liste;:} 
+;
+listeVariable ::= variableGlobale:v {:RESULT=v;:} 
+				| variableGlobale:v1  variableGlobale:v2 {:	
+     if (v1.getFils()==null) {
+							List <Noeud> liste=new ArrayList<Noeud>();
+							liste.add(v2);
+							v1.setFils(liste);
+						}
+						else {v1.ajouterUnFils(v2);}
+					    RESULT=v1;:} 
+                 | {:RESULT=null;:}					
+;
+appel::= APPEL PO IDF:f PO listeargument:l PF PF PV {: Appel fo= new Appel(f);
+												fo.ajouterDesFils(l);
+										RESULT=fo;
+										:}
+;
+retour ::= RETOUR PO expression:x PF PV{: Retour rtn=new Retour("f");
+											rtn.setLeFils(x);
+											RESULT=rtn;
+											 :}
+;
+argument ::= NUM:m {: RESULT= new Const(m); :}
+		 |IDF:p {: RESULT=new Idf(p); :} 
+		  ;
+listeargument ::= argument:a {:List<Noeud> liste=new ArrayList<Noeud>();
+								liste.add(a);
+RESULT=liste;:} 
+| argument:a1 PV argument:a2 {:
+								List<Noeud> liste=new ArrayList<Noeud>();
+									liste.add(a1);
+									liste.add(a2);
+								;	
+					RESULT=liste;:} 
+|     {:List<Noeud> liste=new ArrayList<Noeud>();
+		RESULT=liste;:} 
+;
+
+ecriture ::= ECRIRE expression: x {:Ecrire ecr=new Ecrire();
+							ecr.ajouterUnFils(x);
+									RESULT=ecr;:}
+;
+lecture ::= LIRE IDF:f {:Affectation aff= new Affectation();
+						Idf i= new Idf(f);
+						Lire lire = new Lire();
+						aff.setFilsGauche(i);
+						aff.setFilsDroit(lire); 
+						RESULT=aff;
+:}
+; 
+										
+atome ::= NUM:m {: RESULT= new Const(m); :}
+		 |IDF:p {: RESULT=new Idf(p); :}  
+		 | PO expression:x PF {: RESULT=x ; :}
+		 |lecture :l {: RESULT=l;:}
+;
